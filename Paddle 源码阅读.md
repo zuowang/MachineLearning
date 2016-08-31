@@ -23,6 +23,8 @@
 如果没有安装gdb，执行命令
 	apt-get install gdb
 
+分布式运行可以去节点上通过gdb --pid命令debug
+
 ## 分布式运行 ##
 ### 准备环境 ###
 安装sshd:
