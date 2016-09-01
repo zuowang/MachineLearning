@@ -113,3 +113,32 @@ TrainerThread负责真正的计算，主线程通过getOutArgs()等待计算结�
 
 更新参数是异步的，主线程中会创建SparseRemoteParameterUpdater和RemoteParameterUpdater两个线程。跟启动参数中ports_num+ports_num_for_sparse对应。可以看出Sparse和非Sparse是分开的。
 
+RemoteParameterUpdater类和SparseRemoteParameterUpdater类中创建ParameterClient2类负责网络收发。
+
+![](./parameterClient.jpg)
+
+BaseClient类中启动一组接收线程，接收队列，发送线程，发送队列，数量等于实际PServer数量。
+
+	/// nodes * ports that means the number of real pservers
+	int serviceNum_;
+
+假如有n个PServer进程，sendParameter()把参数或数据放到n个sendJobQueue_里面，n个sendThread_从各自的sendJobQueue_取出并同时发送到n个PServer。避免网络拥塞。以下是代码中原话，作者假设pserver最多就几百个，这种基于线程的并行方式是有效的，对于更大的集群，可能会有问题。
+
+	/**
+	 * threads num for managing all services. Normally the
+	 * number of pservers are relatively less than several
+	 * hundreds so that using thread-based parallelization
+	 * can benifit traffic performance and pserver's sgd
+	 * optimization performance.
+	 */
+	int threadNum_;
+
+ParameterUpdaterCreators根据配置文件创建相应的ParameterUpdater。
+
+SgdThreadUpdater，SgdLocalUpdater，SgdUpdaterWithCpuAverager是local的ParameterUpdater，不需要连接PServer。其他的是remote的ParameterUpdater需要连接PServer。
+
+在Trainer::init paddle/trainer/Trainer.cpp:240中，初始化ParameterUpdater，
+trainerInternal_.getParameterUpdater()->init(parameters);
+
+
+![](./parameterUpdater.jpg)
