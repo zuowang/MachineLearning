@@ -14,3 +14,7 @@ reclaimer thread负责释放空间，处理PostRead，Update，PostlocalAccess�
 在ClientLib::init_comm_channel中，初始化CommunicationChannel，包括RouterHandler（调用start_handler_thread启动消息处理线程），ClientServerEncode，ServerClientDecode，WorkPusher，CachedTables，并启动bg_worker_thread，server_thread。
 server_thread的入口ServerThreadEntry，会初始化RouterHandler，ClientServerEncode，TabletStorage，ServerClientDecode等类，并调用RouterHandler的do_handler，处理消息。
 
+
+
+等待补充。。。
+

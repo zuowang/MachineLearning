@@ -62,5 +62,4 @@ Table::BatchInc->ClientTable(extend AbstractClientTable)::BatchInc->SSPPushAppen
 AppendOnlyOpLogPartition(extend AbstractOpLog)::BatchInc->AbstractAppendOnlyBuffer::BatchInc->IncAppendOnlyBuffer::BatchInc
 
 AbstractAppendOnlyBuffer::BatchInc如果写满buf了，会返回1，否则返回0
-如果返回1，AppendOnlyOpLogPartition::BatchInc会调用BgWorkers::SignalHandleAppendOnlyBuffer
-BgWorkers::SignalHandleAppendOnlyBuffer会调用上面的HandleAppendOpLogMsg，apply oplog
+如果返回1，AppendOnlyOpLogPartition::BatchInc会调用，BgWorkers::SignalHandleAppendOnlyBuffer，后者调用BgWorkerGroup::SignalHandleAppendOnlyBuffer，后者调用AbstractBgWorker::SignalHandleAppendOnlyBuffer，后者发送BgHandleAppendOpLogMsg到bg_worker线程，线程调用AbstractBgWorker::HandleAppendOpLogMsg处理消息，apply oplog
