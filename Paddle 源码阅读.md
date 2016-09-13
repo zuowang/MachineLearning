@@ -114,6 +114,25 @@ SocketWorker类有2个成员变量，channel负责网络收发，server负责处
 1. 调用forwardImp，后者调用startTask，让TrainerThread负责真正的计算，通过getOutArgs()等待计算结果。
 2. 调用backwardImp，后者对cpu参数调用updateCallback，在回调中向PServer更新参数。
 
+  
+
+回调函数:
+	
+	UpdateCallback updateCallback =
+	  [this, showStats, &paraStats](Parameter* para) {
+		if (showStats) {
+		  //! @TODO(yuyang18) Show stats is actually a ParameterHook, refactor
+		  // it
+		  //! to ParameterHook.
+		  auto& grad = para->getBuf(PARAMETER_GRADIENT);
+		  paraStats[para->getID()].avgAbsGrad = grad->getAbsSum() / para->getSize();
+		  paraStats[para->getID()].maxAbsGrad = grad->getAbsMax();
+		}
+		parameterUpdater_->update(para);
+	};
+
+ParameterUpdater::update调用虚函数updateImpl
+RemoteParameterUpdater::updateImpl直接调用localUpdater_->update(para)
 
 
 更新参数是异步的，主线程中会创建SparseRemoteParameterUpdater和RemoteParameterUpdater两个线程。跟启动参数中ports_num+ports_num_for_sparse对应。可以看出Sparse和非Sparse是分开的。
@@ -199,6 +218,8 @@ TrainerThread::mergeCpuGradients()
 
 2. valueDispatchThread(): copying parameter values to partner thread.
 3. copyGradToBufferThread(): copying parameter gradient to partner thread.
-4. gradCollectThread(): merging the gradient from step 3 with local gradient
+4. gradCollectThread(): merging the gradient from step 3 with local gradient.
+
+
 
 
