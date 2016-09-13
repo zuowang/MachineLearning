@@ -53,6 +53,11 @@
 	export PATH_TO_LOCAL_WORKSPACE=/root/paddle/demo/recommendation
 	sh run.sh
 
+提示no model named fabric.api
+
+	pip install fabric
+
+
 root@172.17.0.7上的启动命令是：
 
 	[root@172.17.0.7] run: cd /home/paddle/JOB20160831115853; GLOG_logtostderr=0 GLOG_log_dir="./log" nohup paddle pserver  --num_gradient_servers=2 --nics=eth0 --port=7164 --ports_num=2 --ports_num_for_sparse=2 --comment=paddle_process_by_paddle > ./log/server.log 2>&1 < /dev/null &
@@ -221,5 +226,5 @@ TrainerThread::mergeCpuGradients()
 4. gradCollectThread(): merging the gradient from step 3 with local gradient.
 
 
-
+gpu参数合并，每个参数指定一个主线程id，每个线程的上一个线程是partner。从该参数的主线程开始合并，直到最后一个线程。
 
