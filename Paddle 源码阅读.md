@@ -105,11 +105,16 @@ SocketWorker类有2个成员变量，channel负责网络收发，server负责处
 	#9  0x000000000050b083 in main ()
 	at /root/paddle/paddle/trainer/TrainerMain.cpp:100
 
-主线程初始化会启动FLAGS_trainer_count个TrainerThread，例子中是4个paddle/gserver/gradientmachines/MultiGradientMachine.cpp:134
+主线程初始化会启动FLAGS_trainer_count个TrainerThread对象异步计算，例子中是4个paddle/gserver/gradientmachines/MultiGradientMachine.cpp:134
 
-TrainerThread负责真正的计算，主线程通过getOutArgs()等待计算结果。
 
-主线程会设置updateCallback，在回调中向PServer更新参数。
+
+主线程MultiGradientMachine::forwardBackward
+
+1. 调用forwardImp，后者调用startTask，让TrainerThread负责真正的计算，通过getOutArgs()等待计算结果。
+2. 调用backwardImp，后者对cpu参数调用updateCallback，在回调中向PServer更新参数。
+
+
 
 更新参数是异步的，主线程中会创建SparseRemoteParameterUpdater和RemoteParameterUpdater两个线程。跟启动参数中ports_num+ports_num_for_sparse对应。可以看出Sparse和非Sparse是分开的。
 
@@ -142,3 +147,58 @@ trainerInternal_.getParameterUpdater()->init(parameters);
 
 
 ![](./images/parameterUpdater.jpg)
+
+
+paddle::SendParameterRequest
+
+docker run -d -it -v /home/wangzuo/paddle:/root/paddle paddledev/paddle:cpu-demo-latest
+
+
+main函数在TrainerMain.cpp，其中创建Trainer对象
+Trainer::init中调用initMain,initPython准备，创建TrainerInternal对象
+TrainerInternal::init中根据配置文件创建ParameterUpdater和GradientMachine对象
+MultiGradientMachine的构造函数中创建numThreads_个TrainerThread对象，并调用TrainerThread::start()
+
+TrainerThread的构造函数根据配置文件创建NeuralNetwork
+
+在TrainerThread::start()调用NeuralNetwork::start()，并创建4个线程，
+
+1. computeThread(): performing forward(), backward(), prefetch().
+2. valueDispatchThread(): copying parameter values to partner thread.
+3. copyGradToBufferThread(): copying parameter gradient to partner thread.
+4. gradCollectThread(): merging the gradient from step 3 with local gradient
+
+
+computeThread()线程接收到命令MultiGradientMachine::TASK_FORWARD_BACKWARD，调用TrainerThread::forward()和TrainerThread::backward()
+
+TrainerThread::forward()
+从MultiGradientMachine拷贝inArgs到TrainerThread
+梯度清零
+等待参数同步完成
+调用NeuralNetwork::forward()
+通知MultiGradientMachine，outArgs计算好了
+
+NeuralNetwork::forward()
+用inArgs填充DataLayer
+调用每个Layer的forward()函数
+将OutputLayer的输出填充outArgs
+
+TrainerThread::backward()
+将outArgs中的梯度传输到每个线程
+调用NeuralNetwork::backward()，后者调用每个Layer的backward()
+merge cpu梯度
+
+如果不是cpu梯度，使用valueDispatchThread()，copyGradToBufferThread()，gradCollectThread()合并梯度。
+
+TrainerThread::mergeCpuGradients()
+在Barrier上等待所有TrainerThread::computeThread()线程
+所有TrainerThread::computeThread()线程同时合并梯度，每个线程合并一部分
+
+
+##gpu参数合并和更新
+
+2. valueDispatchThread(): copying parameter values to partner thread.
+3. copyGradToBufferThread(): copying parameter gradient to partner thread.
+4. gradCollectThread(): merging the gradient from step 3 with local gradient
+
+
