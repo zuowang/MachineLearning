@@ -25,6 +25,37 @@
 
 分布式运行可以去节点上通过gdb --pid命令debug
 
+### 分布式debug paddle ###
+编译debug版本
+	cmake .. -DCMAKE_BUILD_TYPE=Debug -DWITH_GPU=OFF -DWITH_DOC=OFF
+	cmake .. -DWITH_GPU=OFF -DWITH_DOC=OFF
+	make -j24
+	make install
+
+
+node1上
+
+	cd /home/paddle/JOB20160920025152
+	paddle pserver  --num_gradient_servers=2 --nics=eth0 --port=7164 --ports_num=2 --ports_num_for_sparse=2 --comment=paddle_process_by_paddle
+
+node2上
+
+	cd /home/paddle/JOB20160920025152
+	paddle pserver  --num_gradient_servers=2 --nics=eth0 --port=7164 --ports_num=2 --ports_num_for_sparse=2 --comment=paddle_process_by_paddle
+
+node1上
+	
+	cd /home/paddle/JOB20160920025152
+	export GLOG_logtostderr=0 
+	export GLOG_log_dir="./log"
+	export DEBUGGER="gdb --args"
+	
+	paddle train  --num_gradient_servers=2 --nics=eth0 --port=7164 --ports_num=2 --comment=paddle_process_by_paddle --pservers=172.17.0.7,172.17.0.8 --trainers=172.17.0.7:7050,172.17.0.8:7050 --use_svb=1  --ports_num_for_sparse=2 --config=./trainer_config.py --use_svb=1 --trainers=172.17.0.7:7050,172.17.0.8:7050 --trainer_count=4 --use_gpu=0 --num_passes=10 --save_dir=./output --log_period=50 --dot_period=10 --saving_period=1 --local=0 --trainer_id=0
+	
+node2上
+
+	paddle train  --num_gradient_servers=2 --nics=eth0 --port=7164 --ports_num=2 --comment=paddle_process_by_paddle --pservers=172.17.0.7,172.17.0.8 --trainers=172.17.0.7:7050,172.17.0.8:7050 --use_svb=1  --ports_num_for_sparse=2 --config=./trainer_config.py --use_svb=1 --trainers=172.17.0.7:7050,172.17.0.8:7050 --trainer_count=4 --use_gpu=0 --num_passes=10 --save_dir=./output --log_period=50 --dot_period=10 --saving_period=1 --local=0 --trainer_id=1
+
 ## 分布式运行 ##
 ### 准备环境 ###
 安装sshd:
@@ -227,4 +258,12 @@ TrainerThread::mergeCpuGradients()
 
 
 gpu参数合并，每个参数指定一个主线程id，每个线程的上一个线程是partner。从该参数的主线程开始合并，直到最后一个线程。
+
+##编译paddle
+cd zeromq-4.1.4
+./configure --with-libsodium=no --with-libgssapi_krb5=no
+apt-get install automake
+make install
+cd paddle/build
+make install
 
