@@ -51,10 +51,12 @@ node1上
 	export DEBUGGER="gdb --args"
 	
 	paddle train  --num_gradient_servers=2 --nics=eth0 --port=7164 --ports_num=2 --comment=paddle_process_by_paddle --pservers=172.17.0.7,172.17.0.8 --trainers=172.17.0.7:7050,172.17.0.8:7050 --use_svb=1  --ports_num_for_sparse=2 --config=./trainer_config.py --use_svb=1 --trainers=172.17.0.7:7050,172.17.0.8:7050 --trainer_count=4 --use_gpu=0 --num_passes=10 --save_dir=./output --log_period=50 --dot_period=10 --saving_period=1 --local=0 --trainer_id=0
+
+	paddle train  --num_gradient_servers=2 --nics=eth0 --port=7164 --ports_num=2 --comment=paddle_process_by_paddle --pservers=172.17.0.2,172.17.0.3 --ports_num_for_sparse=2 --config=./trainer_config.py --trainer_count=4 --use_gpu=0 --num_passes=10 --save_dir=./output --log_period=50 --dot_period=10 --saving_period=1 --local=0 --trainer_id=0
 	
 node2上
 
-	paddle train  --num_gradient_servers=2 --nics=eth0 --port=7164 --ports_num=2 --comment=paddle_process_by_paddle --pservers=172.17.0.7,172.17.0.8 --trainers=172.17.0.7:7050,172.17.0.8:7050 --use_svb=1  --ports_num_for_sparse=2 --config=./trainer_config.py --use_svb=1 --trainers=172.17.0.7:7050,172.17.0.8:7050 --trainer_count=4 --use_gpu=0 --num_passes=10 --save_dir=./output --log_period=50 --dot_period=10 --saving_period=1 --local=0 --trainer_id=1
+	paddle train  --num_gradient_servers=2 --nics=eth0 --port=7164 --ports_num=2 --comment=paddle_process_by_paddle --pservers=172.17.0.2,172.17.0.3 --ports_num_for_sparse=2 --config=./trainer_config.py --trainer_count=4 --use_gpu=0 --num_passes=10 --save_dir=./output --log_period=50 --dot_period=10 --saving_period=1 --local=0 --trainer_id=1
 
 ## 分布式运行 ##
 ### 准备环境 ###
