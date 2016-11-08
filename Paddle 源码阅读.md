@@ -86,6 +86,9 @@ node2上
 	export PATH_TO_LOCAL_WORKSPACE=/root/paddle/demo/recommendation
 	sh run.sh
 
+
+多节点训练，需要手动split数据，每个节点有不同的处理数据，使用`--job_workspace`代替`--job_dispatch_package`避免重复部署
+
 提示no model named fabric.api
 
 	pip install fabric
