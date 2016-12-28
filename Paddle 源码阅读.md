@@ -6,8 +6,12 @@
 ### 启动Paddle容器 ###
 	docker run -it paddledev/paddle:cpu-demo-latest
 	cd /root/paddle
+    export CUDA_SO="$(\ls /usr/lib64/libcuda* | xargs -I{} echo '-v {}:{}') $(\ls /usr/lib64/libnvidia* | xargs -I{} echo '-v {}:{}')"
+    export DEVICES=$(\ls /dev/nvidia* | xargs -I{} echo '--device {}:{}')
+    sudo docker run -it --privileged --name p0 -d -P $CUDA_SO $DEVICES -v /home/deepinsight/paddle:/root/paddle paddledev/paddle:gpu-devel-latest bash
 
-
+    export PATH=/usr/include:$PATH
+    export LD_LIBRARY_PATH=/usr/lib:$LD_LIBRARY_PATH
 
 ## 单机运行Paddle ##
 
@@ -59,9 +63,9 @@ node2上
 	paddle train  --num_gradient_servers=2 --nics=eth0 --port=7164 --ports_num=2 --comment=paddle_process_by_paddle --pservers=172.17.0.2,172.17.0.3 --ports_num_for_sparse=2 --config=./trainer_config.py --trainer_count=4 --use_gpu=0 --num_passes=10 --save_dir=./output --log_period=50 --dot_period=10 --saving_period=1 --local=0 --trainer_id=1
 
 ### reinstall ###
-pip uninstall -u paddle py_paddle
+pip uninstall paddle py_paddle
 rm -rf /usr/local/bin/paddle /usr/local/opt/paddle
-rm -rf Paddle/paddle/dist/*
+rm -rf /root/paddle/paddle/dist/*
 
 cd /root/paddle/build
 make install
