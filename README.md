@@ -1,3 +1,3 @@
 # MachineLearning
-ps-lite
-paddle
+
+机器学习的一些笔记
